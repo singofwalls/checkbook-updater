@@ -1,0 +1,5 @@
+*.code-workspace
+*.json
+*.txt
+.vscode
+__pycache__
