@@ -1,3 +1,4 @@
+"""Handle Google Sheet API and functionality."""
 from __future__ import print_function
 from googleapiclient.discovery import build
 from httplib2 import Http
@@ -37,15 +38,15 @@ def get_range(range_name):
 
 
 def write_cells(range_name, values):
-    """Write values to cells in the given range"""
+    """Write values to cells in the given range."""
     body = {"values": values}
     result = (
         service.spreadsheets()
         .values()
-        .update(
+        .append(
             spreadsheetId=SPREADSHEET_ID,
             range=range_name,
-            valueInputOption="RAW",
+            valueInputOption="USER_ENTERED",
             body=body,
         )
         .execute()

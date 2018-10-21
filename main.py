@@ -1,37 +1,46 @@
 """Read new transactions and update master sheet."""
 
-import read_new_data as new
-import read_old_data as old
+import new_data as new
+import old_data as old
 
 from sheets import authorize
 
 
 def find_transaction(transaction, transactions):
-    """Find the index of a transaction in a list of transactions."""
+    """Find the index of a transaction in a list of transactions.
+    
+    Notes
+    -----
+    A transaction list holds the following values:
+        0: date
+        1: description
+        2: amount
+        3: balance (OPTIONAL)
 
+    """
     def format_money(money):
         return float(money.replace("$", "").replace(",", ""))
 
-    # Check prices
-    price_matches = [
+    # Check amounts
+    amount_matches = [
         trans
         for trans in transactions
         if format_money(trans[2]) == format_money(transaction[2])
     ]
-    if not price_matches:
-        # No prices match, go back to checking all transactions
-        price_matches = transactions
+    if not amount_matches:
+        # No amounts match, go back to checking all transactions
+        amount_matches = transactions
 
-    if len(price_matches) == 1:
-        return transactions.index(price_matches[0])
+    if len(amount_matches) == 1:
+        return transactions.index(amount_matches[0])
 
     # Check descriptions
     description_matches = [
-        trans for trans in price_matches if trans[1].lower() == transaction[1].lower()
+        trans for trans in amount_matches if trans[1].lower() == transaction[1].lower()
     ]
     if not description_matches:
-        # No descriptions match, go back to checking price matches
-        description_matches = price_matches
+        # No descriptions match, go back to checking amount matches
+        description_matches = amount_matches
 
     if len(description_matches) == 1:
         return transactions.index(description_matches[0])
@@ -62,14 +71,20 @@ def find_transaction(transaction, transactions):
 
 
 def main():
+    """Start the script."""
     authorize()
 
     transactions_new = new.get_transactions()
     transactions_old = old.get_transactions()
 
+    # Find the new transactions not already in old
     last_transaction = transactions_old[-1]
-    last_transaction_index = find_transaction(last_transaction, transactions_new)
-    transactions_unrecorded = transactions_new[last_transaction_index + 1 :]
+    index_last_new = find_transaction(last_transaction, transactions_new)
+    transactions_unrecorded = transactions_new[index_last_new + 1 :]
+
+    index_last_old = len(transactions_old)
+
+    old.add_transactions(transactions_unrecorded, index_last_old)
 
 
 if __name__ == "__main__":
