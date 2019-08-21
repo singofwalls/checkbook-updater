@@ -12,6 +12,13 @@ DATE_FORMAT = "%m/%d/%Y"
 RUNNING_FORMULA = (
     f'=sum(indirect(ADDRESS({FIELD_ROW + 1}, COLUMN() - 1)&":"&ADDRESS(ROW(),COLUMN()-1)))'
 )
+METHOD_WORDS = {
+    "Direct": ("deposit", "ach"),
+    "Check": ("check"),
+    "Card": ("pos", "debit", "card")
+}
+METHOD_DEFAULT = "Card"
+PENDING_WORDS = ("memo post", "pending")
 
 
 def get_fields():
@@ -47,7 +54,11 @@ def get_entries(fields, accounts):
         entry = {}
         for field_name in fields:
             # Create dict from values in row
-            value = row[fields[field_name]]
+            field_num = fields[field_name]
+            if field_num >= len(row):
+                # Row ends before the extra stuff
+                continue
+            value = row[field_num]
             entry[field_name] = format_value(value, field_name, DATE_FORMAT)
             # Grab running balance adjacent to account
             if field_name in accounts:
@@ -92,11 +103,34 @@ def update_entry(entry_num, bank_entry, fields, accounts):
         sheets_api.append_cells(f"{SHEET_NAME}!A{row}", [values])
 
 
+def _get_method(description):
+    """Determine the method of payment based on the description."""
+    for method in METHOD_WORDS:
+        for word in METHOD_WORDS[method]:
+            if word in description:
+                return method
+    return METHOD_DEFAULT
+
+
+def _get_pending(description):
+    """Determine whether the transaction is pending based on the description."""
+    for word in PENDING_WORDS:
+        if word in description:
+            return "Yes"
+    return "No"
+
+
+def _get_paypal(description):
+    """Determine whether payment made via paypal based on description."""
+    return ("No", "Yes")["paypal" in description]
+
+
 def _get_value(bank_entry, sheet_field, accounts):
     """Get the value from the bank entry based on a given sheet field.
 
     Maps sheet fields to bank fields.
     """
+    desc = bank_entry["Description"].lower()
     if sheet_field == "Date":
         return bank_entry["Date"].strftime(DATE_FORMAT)
     elif sheet_field in accounts:
@@ -108,6 +142,14 @@ def _get_value(bank_entry, sheet_field, accounts):
         return bank_entry["Description"]
     elif sheet_field == "Running":
         return RUNNING_FORMULA
+    elif sheet_field == "Method":
+        return _get_method(desc)
+    elif sheet_field == "PayPal":
+        return _get_paypal(desc)
+    elif sheet_field == "In_Account":
+        return "Yes"
+    elif sheet_field == "Pending":
+        return _get_pending(desc)
 
     raise Exception(f"Unknown field from sheet: {sheet_field}")
 
