@@ -1,4 +1,6 @@
 """Handle interactions with the Google Sheet."""
+from string import ascii_uppercase
+
 import sheets_api
 from formatting import format_value
 
@@ -7,6 +9,9 @@ ACCOUNT_ROW = 1
 FIELD_ROW = 5
 SHEET_NAME = "Sheet1"
 DATE_FORMAT = "%m/%d/%Y"
+RUNNING_FORMULA = (
+    f'=sum(indirect(ADDRESS({FIELD_ROW + 1}, COLUMN() - 1)&":"&ADDRESS(ROW(),COLUMN()-1)))'
+)
 
 
 def get_fields():
@@ -65,7 +70,12 @@ def update_entry(entry_num, bank_entry, fields, accounts):
 
     """
     values = []
+
     field_indices = {fields[field]: field for field in fields}
+    # Set running to be field to right of account field
+    running_index = fields[bank_entry["account"]] + 1
+    field_indices[running_index] = "Running"
+
     for i in range(max(field_indices.keys()) + 1):
         if i in field_indices:
             field = field_indices[i]
@@ -96,6 +106,8 @@ def _get_value(bank_entry, sheet_field, accounts):
             return ""
     elif sheet_field == "Bank_Listed_Item":
         return bank_entry["Description"]
+    elif sheet_field == "Running":
+        return RUNNING_FORMULA
 
     raise Exception(f"Unknown field from sheet: {sheet_field}")
 

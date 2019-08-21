@@ -24,6 +24,10 @@ def _get_match_factors(sheet_entry, bank_entry, accounts):
         if sheet_amount != "":
             break
 
+    # TODO: Remove after auto updating balances implemented 
+    if not sheet_balance:
+        sheet_balance = 0
+
     factors["amount diff"] = bank_entry["Amount"] - sheet_amount
 
     bank_balance = bank_entry["Balance"]
