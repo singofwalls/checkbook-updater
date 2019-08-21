@@ -37,13 +37,30 @@ def get_range(range_name):
     return result.get("values", [])
 
 
-def write_cells(range_name, values):
-    """Write values to cells in the given range."""
+def append_cells(range_name, values):
+    """Append values to cells in the given range."""
     body = {"values": values}
     result = (
         service.spreadsheets()
         .values()
         .append(
+            spreadsheetId=SPREADSHEET_ID,
+            range=range_name,
+            valueInputOption="USER_ENTERED",
+            body=body,
+        )
+        .execute()
+    )
+    return result
+
+
+def update_cells(range_name, values):
+    """Update values for cells in the given range."""
+    body = {"values": values}
+    result = (
+        service.spreadsheets()
+        .values()
+        .update(
             spreadsheetId=SPREADSHEET_ID,
             range=range_name,
             valueInputOption="USER_ENTERED",

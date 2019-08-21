@@ -1,5 +1,8 @@
 """Handle interactions with the Google Sheet."""
+from string import ascii_uppercase
+
 import sheets_api
+import bank
 from formatting import format_value
 
 # Constants
@@ -55,10 +58,20 @@ def get_entries(fields, accounts):
     return entries
 
 
-def _update_entry(entry_num, sheet_entry, bank_entry):
+def update_entry(entry_num, sheet_entry, bank_entry, fields, accounts):
     """Update the entry in Google Sheets with differing info in the bank entry."""
     sheet_desc = sheet_entry["Bank_Listed_Item"]
     bank_desc = bank_entry["Description"]
     if sheet_desc != bank_desc:
         # Description changed (e.g. no longer pending)
-        pass
+        values = []
+        field_indices = {fields[field]: field for field in fields}
+        for i in range(max(field_indices.keys()) + 1):
+            if i in field_indices:
+                field = field_indices[i]
+                values.append(bank.get_value(bank_entry, field, accounts))
+            else:
+                values.append(None)
+
+        row = FIELD_ROW + entry_num
+        sheets_api.update_cells(f"{SHEET_NAME}!A{row}", [values])
