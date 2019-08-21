@@ -24,8 +24,3 @@ def format_value(value, field="", date_format=""):
             return float(num_val)
 
     return value
-
-
-def format_desc(desc):
-    """Format a description to remove pending."""
-    return desc.replace(PENDING_TAG, "").strip()

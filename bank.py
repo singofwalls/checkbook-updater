@@ -73,21 +73,3 @@ def get_entries(fields):
             entries.extend(account_entries)
 
     return entries
-
-
-def get_value(bank_entry, sheet_field, accounts):
-    """Get the value from the bank entry based on a given sheet field.
-
-    Maps sheet fields to bank fields.
-    """
-    if sheet_field == "Date":
-        return bank_entry["Date"]
-    elif sheet_field in accounts:
-        if bank_entry["account"] == sheet_field:
-            return bank_entry["Amount"]
-        else:
-            return ""
-    elif sheet_field == "Bank_Listed_Item":
-        return bank_entry["Description"]
-
-    raise Exception(f"Unknown field from sheet: {sheet_field}")

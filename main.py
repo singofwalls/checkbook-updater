@@ -3,7 +3,6 @@ import sheets_api
 import sheet
 import bank
 
-from formatting import format_desc
 
 MATCH_WEIGHTS = {"date diff": 50, "amount diff": 50, "balance diff": 5, "desc diff": 30}
 MATCH_RANGES = {"date diff": 5, "amount diff": 1, "balance diff": 200, "desc diff": 1}
@@ -36,7 +35,7 @@ def _get_match_factors(sheet_entry, bank_entry, accounts):
     sheet_desc = sheet_entry["Bank_Listed_Item"]
     bank_desc = bank_entry["Description"]
 
-    factors["desc diff"] = format_desc(sheet_desc) != format_desc(bank_desc)
+    factors["desc diff"] = sheet_desc != bank_desc
 
     return factors
 
@@ -98,11 +97,8 @@ def _find_perfect_matches(sheet_entries, bank_entries, fields, accounts):
 
         if closest_score == 0:
             # Perfect match
-            # TODO: Handle updated descriptions
             matched_sheet_indices.append(closest_match_ind)
             matched_bank_indices.append(bank_ind)
-            match = sheet_entries[closest_match_ind]
-            sheet.update_entry(closest_match_ind, match, bank_entry, fields, accounts)
 
     return matched_sheet_indices, matched_bank_indices, all_scores
 
@@ -132,7 +128,6 @@ def _find_imperfect_matches(
             if PROMPT_NEAR_MATCHES:
                 match = input("Do these match? (y): ")
                 if match == "y":
-                    # TODO: Update entry in sheets
                     print("Updated matches")
                     matched_bank_indices.append(ind)
                     matched_sheet_indices.append(closest_match_ind)

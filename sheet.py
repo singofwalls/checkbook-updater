@@ -1,8 +1,5 @@
 """Handle interactions with the Google Sheet."""
-from string import ascii_uppercase
-
 import sheets_api
-import bank
 from formatting import format_value
 
 # Constants
@@ -39,7 +36,7 @@ def get_entries(fields, accounts):
 
     # Pull all entries from sheet
     entries = []
-    rows = sheets_api.get_range(SHEET_NAME)[FIELD_ROW + 1 :]
+    rows = sheets_api.get_range(SHEET_NAME)[FIELD_ROW:]
 
     for row in rows:
         entry = {}
@@ -60,18 +57,33 @@ def get_entries(fields, accounts):
 
 def update_entry(entry_num, sheet_entry, bank_entry, fields, accounts):
     """Update the entry in Google Sheets with differing info in the bank entry."""
-    sheet_desc = sheet_entry["Bank_Listed_Item"]
-    bank_desc = bank_entry["Description"]
-    if sheet_desc != bank_desc:
-        # Description changed (e.g. no longer pending)
-        values = []
-        field_indices = {fields[field]: field for field in fields}
-        for i in range(max(field_indices.keys()) + 1):
-            if i in field_indices:
-                field = field_indices[i]
-                values.append(bank.get_value(bank_entry, field, accounts))
-            else:
-                values.append(None)
+    values = []
+    field_indices = {fields[field]: field for field in fields}
+    for i in range(max(field_indices.keys()) + 1):
+        if i in field_indices:
+            field = field_indices[i]
+            values.append(get_value(bank_entry, field, accounts))
+        else:
+            values.append(None)
 
-        row = FIELD_ROW + entry_num
-        sheets_api.update_cells(f"{SHEET_NAME}!A{row}", [values])
+    # Indexed from 0, add one for first row
+    row = FIELD_ROW + entry_num + 1
+    sheets_api.update_cells(f"{SHEET_NAME}!A{row}", [values])
+
+
+def get_value(bank_entry, sheet_field, accounts):
+    """Get the value from the bank entry based on a given sheet field.
+
+    Maps sheet fields to bank fields.
+    """
+    if sheet_field == "Date":
+        return bank_entry["Date"].strftime(DATE_FORMAT)
+    elif sheet_field in accounts:
+        if bank_entry["account"] == sheet_field:
+            return bank_entry["Amount"]
+        else:
+            return ""
+    elif sheet_field == "Bank_Listed_Item":
+        return bank_entry["Description"]
+
+    raise Exception(f"Unknown field from sheet: {sheet_field}")
