@@ -55,23 +55,34 @@ def get_entries(fields, accounts):
     return entries
 
 
-def update_entry(entry_num, sheet_entry, bank_entry, fields, accounts):
-    """Update the entry in Google Sheets with differing info in the bank entry."""
+def update_entry(entry_num, bank_entry, fields, accounts):
+    """Update the entry in Google Sheets with differing info in the bank entry.
+
+    Parameters
+    ----------
+    entry_num
+        None if append to end. Else, row of entry to update.
+
+    """
     values = []
     field_indices = {fields[field]: field for field in fields}
     for i in range(max(field_indices.keys()) + 1):
         if i in field_indices:
             field = field_indices[i]
-            values.append(get_value(bank_entry, field, accounts))
+            values.append(_get_value(bank_entry, field, accounts))
         else:
             values.append(None)
 
     # Indexed from 0, add one for first row
-    row = FIELD_ROW + entry_num + 1
-    sheets_api.update_cells(f"{SHEET_NAME}!A{row}", [values])
+    if not isinstance(entry_num, type(None)):
+        row = FIELD_ROW + entry_num + 1
+        sheets_api.update_cells(f"{SHEET_NAME}!A{row}", [values])
+    else:
+        row = FIELD_ROW + 1
+        sheets_api.append_cells(f"{SHEET_NAME}!A{row}", [values])
 
 
-def get_value(bank_entry, sheet_field, accounts):
+def _get_value(bank_entry, sheet_field, accounts):
     """Get the value from the bank entry based on a given sheet field.
 
     Maps sheet fields to bank fields.
@@ -87,3 +98,10 @@ def get_value(bank_entry, sheet_field, accounts):
         return bank_entry["Description"]
 
     raise Exception(f"Unknown field from sheet: {sheet_field}")
+
+
+def add_entries(entries, fields, accounts):
+    """Add new entries to the spreadsheet."""
+
+    for entry in entries:
+        update_entry(None, entry, fields, accounts)

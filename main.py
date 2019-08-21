@@ -110,7 +110,7 @@ def _find_imperfect_matches(
     matched_bank_indices,
     matched_sheet_indices,
     fields,
-    accounts
+    accounts,
 ):
     """Update matched indices to include imperfect matches."""
     for ind, bank_entry in enumerate(bank_entries):
@@ -131,9 +131,7 @@ def _find_imperfect_matches(
                     print("Updated matches")
                     matched_bank_indices.append(ind)
                     matched_sheet_indices.append(closest_match_ind)
-                    sheet.update_entry(
-                        closest_match_ind, closest_match, bank_entry, fields, accounts
-                    )
+                    sheet.update_entry(closest_match_ind, bank_entry, fields, accounts)
 
 
 def find_new_entries(sheet_entries, bank_entries, fields, accounts):
@@ -156,7 +154,7 @@ def find_new_entries(sheet_entries, bank_entries, fields, accounts):
         matched_bank_indices,
         matched_sheet_indices,
         fields,
-        accounts
+        accounts,
     )
 
     all_bank_indices = set(range(len(bank_entries)))
@@ -182,7 +180,7 @@ def main():
     bank_entries = bank.get_entries(bank_fields)
 
     new_entries = find_new_entries(sheet_entries, bank_entries, sheet_fields, accounts)
-    pass
+    sheet.add_entries(new_entries, sheet_fields, accounts)
 
 
 if __name__ == "__main__":
