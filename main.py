@@ -1,90 +1,87 @@
-"""Read new transactions and update master sheet."""
+"""A rewrite of the banking script."""
+from string import ascii_uppercase
+from datetime import timedelta
 
-import new_data as new
-import old_data as old
+import sheets_api
+import sheet
+import bank
 
-from sheets import authorize
+from formatting import format_desc
+
+MATCH_WEIGHTS = {
+    "date diff": 5,
+    "amount diff": 10,
+    "balance diff": 1,
+    "desc": 50,
+    "desc update": 0,
+}
 
 
-def find_transaction(transaction, transactions):
-    """Find the index of a transaction in a list of transactions.
-    
-    Notes
-    -----
-    A transaction list holds the following values:
-        0: date
-        1: description
-        2: amount
-        3: balance (OPTIONAL)
+def _get_match_factors(sheet_entry, bank_entry, accounts):
+    """Get the factors which contribute to a match."""
 
+    factors = {}
+
+    factors["date diff"] = bank_entry["Date"] - sheet_entry["Date"]
+
+    # Find amount which isn't blank for this entry
+    for account in accounts:
+        sheet_amount = sheet_entry[account]
+        sheet_balance = sheet_entry[account + " Running"]
+        if sheet_amount:
+            break
+
+    factors["amount diff"] = bank_entry["Amount"] - sheet_amount
+
+    bank_balance = bank_entry["Balance"]
+
+    factors["balance diff"] = None
+    if bank_balance != "":
+        factors["balance diff"] = bank_balance - sheet_balance
+
+    sheet_desc = sheet_entry["Bank_Listed_Item"]
+    bank_desc = bank_entry["Description"]
+
+    factors["desc"] = format_desc(sheet_desc) == format_desc(bank_desc)
+    factors["desc update"] = sheet_desc != bank_desc
+
+    return factors
+
+
+def score_match(sheet_entry, bank_entry, accounts):
+    """Produce a score based on the factors which contribute to a match and 
+    their weights.
     """
-    def format_money(money):
-        return float(money.replace("$", "").replace(",", ""))
 
-    # Check amounts
-    amount_matches = [
-        trans
-        for trans in transactions
-        if format_money(trans[2]) == format_money(transaction[2])
-    ]
-    if not amount_matches:
-        # No amounts match, go back to checking all transactions
-        amount_matches = transactions
 
-    if len(amount_matches) == 1:
-        return transactions.index(amount_matches[0])
 
-    # Check descriptions
-    description_matches = [
-        trans for trans in amount_matches if trans[1].lower() == transaction[1].lower()
-    ]
-    if not description_matches:
-        # No descriptions match, go back to checking amount matches
-        description_matches = amount_matches
+def find_new_entries(sheet_entries, bank_entries, accounts):
+    """Find all entries not already in the sheet."""
 
-    if len(description_matches) == 1:
-        return transactions.index(description_matches[0])
+    def entry_key(entry):
+        return entry["Date"]
 
-    # Check dates
-    date_matches = [
-        trans for trans in description_matches if trans[0] == transaction[0]
-    ]
-    if not date_matches:
-        # No dates match, go back to checking description matches
-        date_matches = description_matches
+    # Sort entries by date
+    sheet_entries = sorted(sheet_entries, key=entry_key)
+    bank_entries = sorted(bank_entries, key=entry_key)
 
-    if len(date_matches) == 1:
-        return transactions.index(date_matches[0])
-
-    # Check balances
-    balance_matches = [
-        trans
-        for trans in date_matches
-        if len(trans) >= 4 and format_money(trans[3]) == format_money(transaction[3])
-    ]
-    if len(balance_matches) != 1:
-        # Either suddenly no matches found at this stage, or multiple matches still remain
-        breakpoint()
-        raise Exception("Multiple matches for last transaction on sheet in bank list.")
-    else:
-        return transactions.index(balance_matches[0])
+    for sheet_entry in sheet_entries:
+        for bank_entry in bank_entries:
+            print(_get_match_factors(sheet_entry, bank_entry, accounts))
 
 
 def main():
-    """Start the script."""
-    authorize()
+    sheets_api.authorize()
 
-    transactions_new = new.get_transactions()
-    transactions_old = old.get_transactions()
+    accounts = sheet.get_accounts()
 
-    # Find the new transactions not already in old
-    last_transaction = transactions_old[-1]
-    index_last_new = find_transaction(last_transaction, transactions_new)
-    transactions_unrecorded = transactions_new[index_last_new + 1 :]
+    sheet_fields = sheet.get_fields()
+    sheet_entries = sheet.get_entries(sheet_fields, accounts)
 
-    index_last_old = len(transactions_old)
+    bank_fields = bank.get_fields()
+    bank_entries = bank.get_entries(bank_fields)
 
-    old.add_transactions(transactions_unrecorded, index_last_old)
+    new_entries = find_new_entries(sheet_entries, bank_entries, accounts)
 
 
 if __name__ == "__main__":
