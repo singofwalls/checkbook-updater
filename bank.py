@@ -50,7 +50,11 @@ def _get_entries_from_file(fields, content):
             entry = {}
             for field_name in fields:
                 field_num = fields[field_name]
-                value = values[field_num]
+                if len(values) < len(fields) and field_name == "Balance":
+                    # Last row prolly doesn't have final tab deliminator after amount
+                    value = ""
+                else:
+                    value = values[field_num]
                 entry[field_name] = format_value(value, field_name, DATE_FORMAT)
 
             entries.append(entry)

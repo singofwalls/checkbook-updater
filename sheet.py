@@ -9,13 +9,11 @@ ACCOUNT_ROW = 1
 FIELD_ROW = 5
 SHEET_NAME = "Sheet1"
 DATE_FORMAT = "%m/%d/%Y"
-RUNNING_FORMULA = (
-    f'=sum(indirect(ADDRESS({FIELD_ROW + 1}, COLUMN() - 1)&":"&ADDRESS(ROW(),COLUMN()-1)))'
-)
+RUNNING_FORMULA = f'=IF(ISBLANK(INDIRECT(ADDRESS(ROW(), COLUMN() - 1))), "", sum(indirect(ADDRESS({FIELD_ROW + 1}, COLUMN() - 1)&":"&ADDRESS(ROW(),COLUMN()-1))))'
 METHOD_WORDS = {
-    "Direct": ("deposit", "ach"),
+    "Direct": ("deposit", "ach", "accr earning pymt"),
     "Check": ("check"),
-    "Card": ("pos", "debit", "card")
+    "Card": ("pos", "debit", "card"),
 }
 METHOD_DEFAULT = "Card"
 PENDING_WORDS = ("memo post", "pending")
