@@ -1,30 +1,13 @@
 """A rewrite of the banking script."""
-from string import ascii_uppercase
-from datetime import timedelta
-
 import sheets_api
 import sheet
 import bank
 
 from formatting import format_desc
 
-MATCH_WEIGHTS = {
-    "date diff": 50,
-    "amount diff": 50,
-    "balance diff": 5,
-    "desc diff": 50,
-    "desc update": 0,
-}
-
-MATCH_RANGES = {
-    "date diff": 10,
-    "amount diff": 10,
-    "balance diff": 200,
-    "desc diff": 1,
-    "desc update": 1,
-}
-
-THRESHOLD = .5
+MATCH_WEIGHTS = {"date diff": 50, "amount diff": 50, "balance diff": 5, "desc diff": 50}
+MATCH_RANGES = {"date diff": 10, "amount diff": 10, "balance diff": 200, "desc diff": 1}
+THRESHOLD = 0.5
 PROMPT_NEAR_MATCHES = True
 
 
@@ -54,7 +37,6 @@ def _get_match_factors(sheet_entry, bank_entry, accounts):
     bank_desc = bank_entry["Description"]
 
     factors["desc diff"] = format_desc(sheet_desc) != format_desc(bank_desc)
-    factors["desc update"] = sheet_desc != bank_desc
 
     return factors
 
@@ -88,19 +70,11 @@ def _get_closest_score(scores, matched_indexes):
     return closest_ind
 
 
-def find_new_entries(sheet_entries, bank_entries, accounts):
-    """Find all entries not already in the sheet."""
-
-    def entry_key(entry):
-        return entry["Date"]
-
-    # Sort entries by date
-    sheet_entries = sorted(sheet_entries, key=entry_key)
+def _find_perfect_matches(sheet_entries, bank_entries, accounts):
+    """Find indices of perfect matches and all scores."""
+    all_scores = []
     matched_sheet_indices = []
     matched_bank_indices = []
-    bank_entries = sorted(bank_entries, key=entry_key)
-
-    all_scores = []
     # Find all perfect matches
     for bank_ind, bank_entry in enumerate(bank_entries):
         scores = []
@@ -127,10 +101,19 @@ def find_new_entries(sheet_entries, bank_entries, accounts):
             # TODO: Handle updated descriptions
             matched_sheet_indices.append(closest_match_ind)
             matched_bank_indices.append(bank_ind)
+            match = sheet_entries[closest_match_ind]
+            sheet._update_entry(closest_match_ind, match, bank_entry)
 
+    return matched_sheet_indices, matched_bank_indices, all_scores
+
+
+def _find_imperfect_matches(
+    sheet_entries, bank_entries, all_scores, matched_bank_indices, matched_sheet_indices
+):
+    """Update matched indices to include imperfect matches."""
     for ind, bank_entry in enumerate(bank_entries):
-        # Entries with no perfect matches
         if ind in matched_bank_indices:
+            # Already has perfect match
             continue
 
         scores = all_scores[ind]
@@ -148,6 +131,28 @@ def find_new_entries(sheet_entries, bank_entries, accounts):
                     matched_bank_indices.append(ind)
                     matched_sheet_indices.append(closest_match_ind)
 
+
+def find_new_entries(sheet_entries, bank_entries, accounts):
+    """Find all entries not already in the sheet."""
+
+    def entry_key(entry):
+        return entry["Date"]
+
+    # Sort entries by date
+    sheet_entries = sorted(sheet_entries, key=entry_key)
+    bank_entries = sorted(bank_entries, key=entry_key)
+
+    matches = _find_perfect_matches(sheet_entries, bank_entries, accounts)
+    matched_sheet_indices, matched_bank_indices, all_scores = matches
+
+    _find_imperfect_matches(
+        sheet_entries,
+        bank_entries,
+        all_scores,
+        matched_bank_indices,
+        matched_sheet_indices,
+    )
+
     all_bank_indices = set(range(len(bank_entries)))
     unmatched_indices = all_bank_indices - set(matched_bank_indices)
 
@@ -159,6 +164,7 @@ def find_new_entries(sheet_entries, bank_entries, accounts):
 
 
 def main():
+    """Run the program."""
     sheets_api.authorize()
 
     accounts = sheet.get_accounts()
@@ -171,6 +177,7 @@ def main():
 
     new_entries = find_new_entries(sheet_entries, bank_entries, accounts)
     pass
+
 
 if __name__ == "__main__":
     main()

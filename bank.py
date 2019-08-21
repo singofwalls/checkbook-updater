@@ -59,7 +59,7 @@ def _get_entries_from_file(fields, content):
 
 
 def get_entries(fields):
-    """Organize entries from txts"""
+    """Organize entries from txts."""
     entries = []
 
     for file_name in os.listdir():

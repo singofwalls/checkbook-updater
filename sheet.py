@@ -53,3 +53,12 @@ def get_entries(fields, accounts):
         entries.append(entry)
 
     return entries
+
+
+def _update_entry(entry_num, sheet_entry, bank_entry):
+    """Update the entry in Google Sheets with differing info in the bank entry."""
+    sheet_desc = sheet_entry["Bank_Listed_Item"]
+    bank_desc = bank_entry["Description"]
+    if sheet_desc != bank_desc:
+        # Description changed (e.g. no longer pending)
+        pass
