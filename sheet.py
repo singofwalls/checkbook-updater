@@ -12,7 +12,7 @@ DATE_FORMAT = "%m/%d/%Y"
 RUNNING_FORMULA = f'=IF(ISBLANK(INDIRECT(ADDRESS(ROW(), COLUMN() - 1))), "", sum(indirect(ADDRESS({FIELD_ROW + 1}, COLUMN() - 1)&":"&ADDRESS(ROW(),COLUMN()-1))))'
 METHOD_WORDS = {
     "Direct": ("deposit", "ach", "accr earning pymt"),
-    "Check": ("check"),
+    "Check": ("check", ),
     "Card": ("pos", "debit", "card"),
 }
 METHOD_DEFAULT = "Card"
