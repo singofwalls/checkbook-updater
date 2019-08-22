@@ -16,7 +16,7 @@ METHOD_WORDS = {
     "Card": ("pos", "debit", "card"),
 }
 METHOD_DEFAULT = "Card"
-PENDING_WORDS = ("memo post", "pending")
+PENDING_WORDS = ("memo post", "pending", "preauth", "w/d")
 
 
 def get_fields():

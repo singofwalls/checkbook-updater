@@ -4,7 +4,7 @@ import sheet
 import bank
 
 
-MATCH_WEIGHTS = {"date diff": 50, "amount diff": 50, "balance diff": 5, "desc diff": 30}
+MATCH_WEIGHTS = {"date diff": 20, "amount diff": 50, "balance diff": 0, "desc diff": 20}
 MATCH_RANGES = {"date diff": 5, "amount diff": 1, "balance diff": 200, "desc diff": 1}
 THRESHOLD = 0.5
 PROMPT_NEAR_MATCHES = True
@@ -31,11 +31,13 @@ def _get_match_factors(sheet_entry, bank_entry, accounts):
     factors["balance diff"] = 0
     if bank_balance != "":
         factors["balance diff"] = bank_balance - sheet_balance
+        if abs(factors["balance diff"]) < 1:
+            factors["balance diff"] = 0
 
     sheet_desc = sheet_entry["Bank_Listed_Item"]
     bank_desc = bank_entry["Description"]
 
-    factors["desc diff"] = sheet_desc != bank_desc
+    factors["desc diff"] = sheet_desc.strip() != bank_desc.strip()
 
     return factors
 
