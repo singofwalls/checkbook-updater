@@ -69,6 +69,11 @@ def get_entries(fields, accounts):
     return entries
 
 
+def get_row(entry_index):
+    """Return the row in the sheet which corresponds to a given index."""
+    return entry_index + FIELD_ROW + 1
+
+
 def update_entry(entry_num, bank_entry, fields, accounts):
     """Update the entry in Google Sheets with differing info in the bank entry.
 
@@ -88,15 +93,16 @@ def update_entry(entry_num, bank_entry, fields, accounts):
     for i in range(max(field_indices.keys()) + 1):
         if i in field_indices:
             field = field_indices[i]
-            values.append(_get_value(bank_entry, field, accounts))
+            values.append(get_value(bank_entry, field, accounts))
         else:
             values.append(None)
 
     # Indexed from 0, add one for first row
     if not isinstance(entry_num, type(None)):
-        row = FIELD_ROW + entry_num + 1
+        row = get_row(entry_num)
         sheets_api.update_cells(f"{SHEET_NAME}!A{row}", [values])
     else:
+        # Point to first row of table, google sheets api will append to end
         row = FIELD_ROW + 1
         sheets_api.append_cells(f"{SHEET_NAME}!A{row}", [values])
 
@@ -123,7 +129,7 @@ def _get_paypal(description):
     return ("No", "Yes")["paypal" in description]
 
 
-def _get_value(bank_entry, sheet_field, accounts):
+def get_value(bank_entry, sheet_field, accounts):
     """Get the value from the bank entry based on a given sheet field.
 
     Maps sheet fields to bank fields.
@@ -138,8 +144,6 @@ def _get_value(bank_entry, sheet_field, accounts):
             return ""
     elif sheet_field == "Bank_Listed_Item":
         return bank_entry["Description"]
-    elif sheet_field == "Running":
-        return RUNNING_FORMULA
     elif sheet_field == "Method":
         return _get_method(desc)
     elif sheet_field == "PayPal":
@@ -148,6 +152,16 @@ def _get_value(bank_entry, sheet_field, accounts):
         return "Yes"
     elif sheet_field == "Pending":
         return _get_pending(desc)
+    elif "Running" in sheet_field:
+        if sheet_field == bank_entry["account"] + " Running":
+            # This occurs when called from print_match and is printed to console
+            return bank_entry["Balance"]
+        elif sheet_field == "Running":
+            # This occurs when called from update_entry and goes in the sheet
+            return RUNNING_FORMULA
+        else:
+            # This occurs from print_match. For runnings which are not the current account
+            return ""
 
     raise Exception(f"Unknown field from sheet: {sheet_field}")
 

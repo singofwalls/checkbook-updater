@@ -24,10 +24,6 @@ def _get_match_factors(sheet_entry, bank_entry, accounts):
         if sheet_amount != "":
             break
 
-    # TODO: Remove after auto updating balances implemented 
-    if not sheet_balance:
-        sheet_balance = 0
-
     factors["amount diff"] = bank_entry["Amount"] - sheet_amount
 
     bank_balance = bank_entry["Balance"]
@@ -107,6 +103,30 @@ def _find_perfect_matches(sheet_entries, bank_entries, fields, accounts):
     return matched_sheet_indices, matched_bank_indices, all_scores
 
 
+def print_match(sheet_entry, bank_entry, score, closest_match_ind, accounts):
+    """Print the match side by side."""
+    print(f"NEAR MATCH: ROW {sheet.get_row(closest_match_ind)}, SCORE {score}")
+    new = []
+    old = []
+    for field in sheet_entry:
+        new.append(str(sheet.get_value(bank_entry, field, accounts)))
+        old_value = sheet_entry[field]
+        if field == "Date":
+            old_value = old_value.strftime(sheet.DATE_FORMAT)
+        old.append(str(old_value))
+
+    value_lists = [sheet_entry.keys(), old, new]
+    table_format = ""
+    for value_list in value_lists:
+        longest = str(max(map(lambda v: len(v), value_list)) + 3)
+        table_format += f"{{:<{longest}}}"
+    print(table_format.format("", "OLD", "NEW"))
+    for num, field in enumerate(sheet_entry):
+        print(table_format.format(field, old[num], new[num]))
+
+    pass
+
+
 def _find_imperfect_matches(
     sheet_entries,
     bank_entries,
@@ -128,7 +148,10 @@ def _find_imperfect_matches(
         closest_match = sheet_entries[closest_match_ind]
 
         if closest_score < THRESHOLD:
-            print(f"NEAR MATCH: {closest_score} for", bank_entry, closest_match)
+            # print(f"NEAR MATCH: {closest_score} for", bank_entry, closest_match)
+            print_match(
+                closest_match, bank_entry, closest_score, closest_match_ind, accounts
+            )
             if PROMPT_NEAR_MATCHES:
                 match = input("Do these match? (y): ")
                 if match == "y":
@@ -145,7 +168,7 @@ def find_new_entries(sheet_entries, bank_entries, fields, accounts):
         return entry["Date"]
 
     # Sort entries by date
-    sheet_entries = sorted(sheet_entries, key=entry_key)
+    # Do not sort sheets as the order must match what is in the sheet
     bank_entries = sorted(bank_entries, key=entry_key)
 
     matches = _find_perfect_matches(sheet_entries, bank_entries, fields, accounts)
