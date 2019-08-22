@@ -77,3 +77,8 @@ def get_entries(fields):
             entries.extend(account_entries)
 
     return entries
+
+
+def pull_transactions():
+    """Pull transactions from the Bank of Tescott website."""
+

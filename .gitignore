@@ -1,5 +1,8 @@
 *.code-workspace
 *.json
 *.txt
+*.exe
 .vscode
 __pycache__
+.venv
+.mypy*
