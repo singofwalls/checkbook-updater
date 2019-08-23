@@ -4,7 +4,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import ElementNotInteractableException
 from bs4 import BeautifulSoup
 
-import bank
 from formatting import format_value
 
 import time
@@ -13,6 +12,7 @@ import os
 
 
 BANK_INFO = "bank_info.json"
+DATE_FORMAT = "%b %d, %Y"
 
 
 def _expand_table(driver):
@@ -80,28 +80,11 @@ def _parse_entries(raw_lines):
             entry["Amount"], entry["Balance"] = group[2], ""
 
         for field in entry:
-            entry[field] = format_value(entry[field], field, bank.DATE_FORMAT)
+            entry[field] = format_value(entry[field], field, DATE_FORMAT)
 
         entries.append(entry)
 
     return entries
-
-
-def _save_transactions(text, account):
-    """Save the transactions to a text document.
-    
-    DEPRECATED. Parse instead.
-    """
-    if not os.getcwd().strip("\\").endswith(bank.FILE_PATH.strip("/")):
-        os.chdir(bank.FILE_PATH)
-
-    file_name = f"{account}.txt"
-    try:
-        os.remove(file_name)
-    except FileNotFoundError:
-        pass
-    with open(file_name, "w") as file:
-        file.write(text)
 
 
 def _get_table_lines(driver):

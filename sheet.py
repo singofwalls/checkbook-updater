@@ -16,8 +16,6 @@ METHOD_WORDS = {
     "Card": ("pos", "debit", "card"),
 }
 METHOD_DEFAULT = "Card"
-# DEPRECATED:
-PENDING_WORDS = ("memo post", "pending", "preauth", "w/d")
 
 
 def get_fields():
@@ -115,17 +113,6 @@ def _get_method(description):
             if word in description:
                 return method
     return METHOD_DEFAULT
-
-
-def _get_pending(description):
-    """Determine whether the transaction is pending based on the description.
-    
-    DEPRECATED. Use pending field instead.
-    """
-    for word in PENDING_WORDS:
-        if word in description:
-            return "Yes"
-    return "No"
 
 
 def _get_paypal(description):
