@@ -1,7 +1,7 @@
 """A rewrite of the banking script."""
 import sheets_api
 import sheet
-import bank
+import bank_website
 
 
 MATCH_WEIGHTS = {"date diff": 20, "amount diff": 50, "balance diff": 0, "desc diff": 20}
@@ -205,8 +205,7 @@ def main():
     sheet_fields = sheet.get_fields()
     sheet_entries = sheet.get_entries(sheet_fields, accounts)
 
-    bank_fields = bank.get_fields()
-    bank_entries = bank.get_entries(bank_fields)
+    bank_entries = bank_website.get_entries(accounts)
 
     new_entries = find_new_entries(sheet_entries, bank_entries, sheet_fields, accounts)
     sheet.add_entries(new_entries, sheet_fields, accounts)

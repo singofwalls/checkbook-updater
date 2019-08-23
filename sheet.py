@@ -16,6 +16,7 @@ METHOD_WORDS = {
     "Card": ("pos", "debit", "card"),
 }
 METHOD_DEFAULT = "Card"
+# DEPRECATED:
 PENDING_WORDS = ("memo post", "pending", "preauth", "w/d")
 
 
@@ -117,7 +118,10 @@ def _get_method(description):
 
 
 def _get_pending(description):
-    """Determine whether the transaction is pending based on the description."""
+    """Determine whether the transaction is pending based on the description.
+    
+    DEPRECATED. Use pending field instead.
+    """
     for word in PENDING_WORDS:
         if word in description:
             return "Yes"
@@ -151,7 +155,9 @@ def get_value(bank_entry, sheet_field, accounts):
     elif sheet_field == "In_Account":
         return "Yes"
     elif sheet_field == "Pending":
-        return _get_pending(desc)
+        if bank_entry["Transaction Status"] == "Pending transaction":
+            return "Yes"
+        return "No"
     elif "Running" in sheet_field:
         if sheet_field == bank_entry["account"] + " Running":
             # This occurs when called from print_match and is printed to console

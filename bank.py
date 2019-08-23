@@ -15,7 +15,10 @@ DATE_FORMAT = "%b %d, %Y"
 
 
 def get_fields():
-    """Get fields from bank's txt."""
+    """Get fields from bank's txt.
+    
+    DEPRECATED.
+    """
     os.chdir(FILE_PATH)
     files = os.listdir()
 
@@ -37,7 +40,10 @@ def get_fields():
 
 
 def _get_entries_from_file(fields, content):
-    """Get entries from file content."""
+    """Get entries from file content.
+
+    DEPRECATED. Auto pull from account instead.
+    """
     # Remove header line
     raw_lines = content.split("\n")[1:]
     entries = []
@@ -62,8 +68,11 @@ def _get_entries_from_file(fields, content):
     return entries
 
 
-def get_entries(fields):
-    """Organize entries from txts."""
+def process_file_entries(fields):
+    """Organize entries from txts.
+
+    DEPRECATED. Get entries from bank site instead. 
+    """
     entries = []
 
     for file_name in os.listdir():
@@ -77,8 +86,3 @@ def get_entries(fields):
             entries.extend(account_entries)
 
     return entries
-
-
-def pull_transactions():
-    """Pull transactions from the Bank of Tescott website."""
-
