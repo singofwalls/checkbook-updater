@@ -154,13 +154,18 @@ def _find_imperfect_matches(
             print_match(
                 closest_match, bank_entry, closest_score, closest_match_ind, accounts
             )
-            if PROMPT_NEAR_MATCHES:
-                match = input("Do these match? (y): ")
-                if match == "y":
-                    print("Updated matches")
-                    matched_bank_indices.append(ind)
-                    matched_sheet_indices.append(closest_match_ind)
-                    sheet.update_entry(closest_match_ind, bank_entry, fields, accounts)
+
+            do_match = PROMPT_NEAR_MATCHES and input("Do these match? (y): ") == "y"
+
+            # More than likely no longer pending in this case. Update.
+            pending_update = (
+                closest_match["Pending"] == "Yes" and bank_entry["Pending"] == "No"
+            )
+            if do_match or (not PROMPT_NEAR_MATCHES and pending_update):
+                print("Updated matches")
+                matched_bank_indices.append(ind)
+                matched_sheet_indices.append(closest_match_ind)
+                sheet.update_entry(closest_match_ind, bank_entry, fields, accounts)
 
 
 def find_new_entries(sheet_entries, bank_entries, fields, accounts):
