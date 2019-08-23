@@ -1,6 +1,4 @@
 """Handle interactions with the Google Sheet."""
-from string import ascii_uppercase
-
 import sheets_api
 from formatting import format_value
 
@@ -153,7 +151,8 @@ def get_value(bank_entry, sheet_field, accounts):
             # This occurs when called from update_entry and goes in the sheet
             return RUNNING_FORMULA
         else:
-            # This occurs from print_match. For runnings which are not the current account
+            # This occurs from print_match.
+            # For runnings which are not the current account
             return ""
 
     raise Exception(f"Unknown field from sheet: {sheet_field}")

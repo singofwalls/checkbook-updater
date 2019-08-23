@@ -1,14 +1,13 @@
+"""Handle interaction with bank website."""
+
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import ElementNotInteractableException
-from bs4 import BeautifulSoup
 
 from formatting import format_value
 
 import time
 import json
-import os
 
 
 BANK_INFO = "bank_info.json"
