@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementNotInteractableException
 
 from formatting import format_value
+import sheet
 
 import time
 import json
@@ -26,18 +27,15 @@ def _expand_table(driver):
         while True:
             # Load all transactions
             time.sleep(1)
-            print("Click")
             more.click()
     except ElementNotInteractableException:
         # No more transactions
-        print("No more")
         pass
     time.sleep(1)
 
     # Double check to ensure no more transactions
     lines = _get_table_lines(driver)
     if "MORE TRANSACTIONS" in lines:
-        print("Still more")
         _expand_table(driver)
 
 
@@ -65,7 +63,6 @@ def _parse_entries(raw_lines):
 
     for group in _get_groups(raw_lines):
         # Refactor date lines onto start of following line and split tabs
-        print(group)
         entry = {}
         first_values = group[0].split(" ")
         entry["Transaction Status"] = " ".join(first_values[:2])
@@ -99,18 +96,22 @@ def _process_accounts(driver, accounts):
 
     entries_list = []
 
-    for i in range(3):
+    for i in range(len(accounts)):
+        account = accounts[i]
+
         while True:
             try:
                 account_links = driver.find_elements_by_partial_link_text("Account")
                 # First account link is to Accounts header
                 account_links[i + 1].click()
-                print("Click", i)
                 break
             except Exception as e:
-                print("Refreshing", e)
                 driver.refresh()
                 time.sleep(3)
+
+        available = format_value(driver.find_element_by_class_name("h2").text)
+        sheet.add_bank_balance(available, account, accounts)
+
         _expand_table(driver)
 
         # Get table text
@@ -118,7 +119,7 @@ def _process_accounts(driver, accounts):
         entries = _parse_entries(lines)
         # Add account field
         for num in range(len(entries)):
-            entries[num]["account"] = accounts[i]
+            entries[num]["account"] = account
 
         entries_list.extend(entries)
 
@@ -161,6 +162,8 @@ def _get_driver(info, headless=True):
     """Start a headless webdriver."""
     options = webdriver.ChromeOptions()
     options.headless = headless
+    options.add_argument('log-level=3')
+    options.add_experimental_option('excludeSwitches', ['enable-logging'])
     driver = webdriver.Chrome(options=options)
     driver.get(info["url"])
     return driver
@@ -180,7 +183,3 @@ def get_entries(accounts):
     _login(driver, info)
     entries = _process_accounts(driver, accounts)
     return entries
-
-
-if __name__ == "__main__":
-    get_entries(["Savings", "Checking", "School"])

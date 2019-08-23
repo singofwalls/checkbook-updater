@@ -1,10 +1,12 @@
 """Handle interactions with the Google Sheet."""
+import datetime
+
 import sheets_api
 from formatting import format_value
 
 # Constants
 ACCOUNT_ROW = 1
-FIELD_ROW = 5
+FIELD_ROW = 7
 SHEET_NAME = "Sheet1"
 DATE_FORMAT = "%m/%d/%Y"
 RUNNING_FORMULA = f'=IF(ISBLANK(INDIRECT(ADDRESS(ROW(), COLUMN() - 1))), "", sum(indirect(ADDRESS({FIELD_ROW + 1}, COLUMN() - 1)&":"&ADDRESS(ROW(),COLUMN()-1))))'
@@ -33,9 +35,9 @@ def get_fields():
 
 def get_accounts():
     """Get the names of the accounts."""
-    account_row = sheets_api.get_range(f"{SHEET_NAME}!{ACCOUNT_ROW}2:{ACCOUNT_ROW}")[0]
-    # First cell is "Account": skip it
-    return account_row[1:]
+    account_row = sheets_api.get_range(f"{SHEET_NAME}!{ACCOUNT_ROW}:{ACCOUNT_ROW}")[0]
+    # First cell is "Account": find and skip it
+    return account_row[account_row.index("Account") + 1:]
 
 
 def get_entries(fields, accounts):
@@ -158,8 +160,22 @@ def get_value(bank_entry, sheet_field, accounts):
     raise Exception(f"Unknown field from sheet: {sheet_field}")
 
 
+def add_bank_balance(amount, account, accounts):
+    """Add the bank's reported amount to the sheet."""
+    row = ACCOUNT_ROW + 3
+    values = [None] * len(accounts)
+    values[accounts.index(account)] = amount
+    sheets_api.update_cells(f"{SHEET_NAME}!B{row}", [values])
+
+
 def add_entries(entries, fields, accounts):
     """Add new entries to the spreadsheet."""
 
     for entry in entries:
         update_entry(None, entry, fields, accounts)
+
+
+def update_timestamp():
+    """Update the timestamp on the sheet."""
+    timestamp = datetime.datetime.now().strftime("%m/%d/%Y %I:%M:%S %p")
+    sheets_api.update_cells(f"{SHEET_NAME}!B{FIELD_ROW - 1}", [[timestamp]])

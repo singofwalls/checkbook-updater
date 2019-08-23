@@ -159,7 +159,8 @@ def _find_imperfect_matches(
 
             # More than likely no longer pending in this case. Update.
             pending_update = (
-                closest_match["Pending"] == "Yes" and bank_entry["Pending"] == "No"
+                closest_match["Pending"] == "Yes"
+                and bank_entry["Transaction Status"] == "No"
             )
             if do_match or (not PROMPT_NEAR_MATCHES and pending_update):
                 print("Updated matches")
@@ -214,6 +215,7 @@ def main():
 
     new_entries = find_new_entries(sheet_entries, bank_entries, sheet_fields, accounts)
     sheet.add_entries(new_entries, sheet_fields, accounts)
+    sheet.update_timestamp()
 
 
 if __name__ == "__main__":
