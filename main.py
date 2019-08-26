@@ -4,8 +4,20 @@ import sheet
 import bank_website
 
 
-MATCH_WEIGHTS = {"date diff": 20, "amount diff": 50, "balance diff": 0, "desc diff": 20}
-MATCH_RANGES = {"date diff": 5, "amount diff": 1, "balance diff": 200, "desc diff": 1}
+MATCH_WEIGHTS = {
+    "date diff": 30,
+    "amount diff": 50,
+    "balance diff": 0,
+    "desc diff": 20,
+    "account diff": 1000,
+}
+MATCH_RANGES = {
+    "date diff": 5,
+    "amount diff": 1,
+    "balance diff": 200,
+    "desc diff": 1,
+    "account diff": 1,
+}
 THRESHOLD = 0.5
 PROMPT_NEAR_MATCHES = True
 
@@ -22,8 +34,10 @@ def _get_match_factors(sheet_entry, bank_entry, accounts):
         sheet_amount = sheet_entry[account]
         sheet_balance = sheet_entry[account + " Running"]
         if sheet_amount != "":
+            sheet_account = account
             break
 
+    factors["account diff"] = sheet_account != bank_entry["account"]
     factors["amount diff"] = bank_entry["Amount"] - sheet_amount
 
     bank_balance = bank_entry["Balance"]
@@ -124,7 +138,8 @@ def print_match(sheet_entry, bank_entry, score, closest_match_ind, accounts):
         table_format += f"{{:<{longest}}}"
     print(table_format.format("", "OLD", "NEW"))
     for num, field in enumerate(sheet_entry):
-        print(table_format.format(field, old[num], new[num]))
+        change = "* " if old[num] != new[num] else "  "
+        print(table_format.format(f"{change}{field}", old[num], new[num]))
 
     pass
 
@@ -155,14 +170,18 @@ def _find_imperfect_matches(
                 closest_match, bank_entry, closest_score, closest_match_ind, accounts
             )
 
-            do_match = PROMPT_NEAR_MATCHES and input("Do these match? (y): ") == "y"
-
             # More than likely no longer pending in this case. Update.
             pending_update = (
                 closest_match["Pending"] == "Yes"
                 and bank_entry["Transaction Status"] == "No"
             )
-            if do_match or (not PROMPT_NEAR_MATCHES and pending_update):
+            desc_update = closest_match["Bank_Listed_Item"] != bank_entry["Description"]
+
+            do_match = PROMPT_NEAR_MATCHES and input("Do these match? (y): ") == "y"
+
+            if do_match or (
+                not PROMPT_NEAR_MATCHES and (pending_update or desc_update)
+            ):
                 print("Updated matches")
                 matched_bank_indices.append(ind)
                 matched_sheet_indices.append(closest_match_ind)

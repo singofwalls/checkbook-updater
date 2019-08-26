@@ -182,4 +182,5 @@ def get_entries(accounts):
     driver = _get_driver(info)
     _login(driver, info)
     entries = _process_accounts(driver, accounts)
+    driver.close()
     return entries

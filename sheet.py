@@ -9,7 +9,8 @@ ACCOUNT_ROW = 1
 FIELD_ROW = 7
 SHEET_NAME = "Sheet1"
 DATE_FORMAT = "%m/%d/%Y"
-RUNNING_FORMULA = f'=IF(ISBLANK(INDIRECT(ADDRESS(ROW(), COLUMN() - 1))), "", sum(indirect(ADDRESS({FIELD_ROW + 1}, COLUMN() - 1)&":"&ADDRESS(ROW(),COLUMN()-1))))'
+START_CELL = "$G$6"  # If changed, must recopy formula to all cells in running columns
+RUNNING_FORMULA = f'=IF(ISBLANK(INDIRECT(ADDRESS(ROW(), COLUMN() - 1))), "", sum(indirect(ADDRESS({START_CELL}, COLUMN() - 1)&":"&ADDRESS(ROW(),COLUMN()-1))))'
 METHOD_WORDS = {
     "Direct": ("deposit", "ach", "accr earning pymt"),
     "Check": ("check", ),
