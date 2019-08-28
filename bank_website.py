@@ -2,7 +2,7 @@
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import ElementNotInteractableException
+from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException
 
 from formatting import format_value
 import sheet
@@ -133,9 +133,19 @@ def _security_question(driver, info):
 
     May not be necessary if device already remembered.
     """
-    # TODO: Automatically determine if on sec page
+    try:
+        form = driver.find_element_by_id("securityChallengeForm")
+    except NoSuchElementException:
+        # Not on security page
+        return
+
+    question = form.text.split("\n")[0]
+
+    answers = info["security"]
+    answer = answers[question]
+
     input_box = driver.find_element_by_id("securityQuestion")
-    input_box.send_keys(info["security"])
+    input_box.send_keys(answer)
 
     # Don't ask again checkbox
     box = driver.find_element_by_id("horiz-3-question")
@@ -181,6 +191,7 @@ def get_entries(accounts):
     info = _get_bank_info()
     driver = _get_driver(info)
     _login(driver, info)
+    _security_question(driver, info)
     entries = _process_accounts(driver, accounts)
     driver.close()
     return entries
