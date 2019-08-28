@@ -6,6 +6,7 @@ from selenium.common.exceptions import (
     ElementNotInteractableException,
     NoSuchElementException,
     UnexpectedAlertPresentException,
+    ElementNotVisibleException
 )
 
 from formatting import format_value
@@ -32,7 +33,7 @@ def _expand_table(driver):
             # Load all transactions
             time.sleep(1)
             more.click()
-    except ElementNotInteractableException:
+    except (ElementNotInteractableException, ElementNotVisibleException):
         # No more transactions
         pass
     time.sleep(1)
