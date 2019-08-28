@@ -2,7 +2,11 @@
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException, UnexpectedAlertPresentException
+from selenium.common.exceptions import (
+    ElementNotInteractableException,
+    NoSuchElementException,
+    UnexpectedAlertPresentException,
+)
 
 from formatting import format_value
 import sheet
@@ -172,8 +176,8 @@ def _get_driver(info, headless=True):
     """Start a headless webdriver."""
     options = webdriver.ChromeOptions()
     options.headless = headless
-    options.add_argument('log-level=3')
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    options.add_argument("log-level=3")
+    options.add_experimental_option("excludeSwitches", ["enable-logging"])
     driver = webdriver.Chrome(options=options)
     driver.get(info["url"])
     return driver
@@ -185,23 +189,24 @@ def _get_bank_info():
         return json.load(file)
 
 
-def _get_entries(accounts):
-    """Go through the steps of getting transactions from bank website."""
-    info = _get_bank_info()
-    driver = _get_driver(info)
-    _login(driver, info)
-    _security_question(driver, info)
-    entries = _process_accounts(driver, accounts)
-    driver.close()
-    return entries
-
-
 def get_entries(accounts):
     """Pull transactions from bank website and handle alerts."""
+
+    def _get_entries(accounts, driver, info):
+        """Go through the steps of getting transactions from bank website."""
+        _login(driver, info)
+        _security_question(driver, info)
+        entries = _process_accounts(driver, accounts)
+        return entries
+
+    info = _get_bank_info()
+    driver = _get_driver(info)
     try:
-        return _get_entries(accounts)
+        return _get_entries(accounts, driver, info)
     except UnexpectedAlertPresentException:
         # Try one more time if an alert appears.
         # Appears to happen after answering security questions which should only be
         # necessary once anyway.
-        return _get_entries(accounts)
+        return _get_entries(accounts, driver, info)
+    finally:
+        driver.close()
