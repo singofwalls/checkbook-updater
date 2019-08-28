@@ -2,7 +2,7 @@
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException
+from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException, UnexpectedAlertPresentException
 
 from formatting import format_value
 import sheet
@@ -185,9 +185,8 @@ def _get_bank_info():
         return json.load(file)
 
 
-def get_entries(accounts):
-    """Pull transactions from bank website."""
-
+def _get_entries(accounts):
+    """Go through the steps of getting transactions from bank website."""
     info = _get_bank_info()
     driver = _get_driver(info)
     _login(driver, info)
@@ -195,3 +194,14 @@ def get_entries(accounts):
     entries = _process_accounts(driver, accounts)
     driver.close()
     return entries
+
+
+def get_entries(accounts):
+    """Pull transactions from bank website and handle alerts."""
+    try:
+        return _get_entries(accounts)
+    except UnexpectedAlertPresentException:
+        # Try one more time if an alert appears.
+        # Appears to happen after answering security questions which should only be
+        # necessary once anyway.
+        return _get_entries(accounts)
