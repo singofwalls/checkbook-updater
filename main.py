@@ -19,7 +19,7 @@ MATCH_RANGES = {
     "account diff": 1,
 }
 THRESHOLD = 0.5
-PROMPT_NEAR_MATCHES = True
+PROMPT_NEAR_MATCHES = False
 
 
 def _get_match_factors(sheet_entry, bank_entry, accounts):
