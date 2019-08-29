@@ -211,3 +211,4 @@ def get_entries(accounts):
         return _get_entries(accounts, driver, info)
     finally:
         driver.close()
+        driver.quit()
