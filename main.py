@@ -2,6 +2,7 @@
 import sheets_api
 import sheet
 import bank_website
+import datetime
 
 
 MATCH_WEIGHTS = {
@@ -20,6 +21,8 @@ MATCH_RANGES = {
 }
 THRESHOLD = 0.5
 PROMPT_NEAR_MATCHES = False
+LOG_FILE = "log.txt"
+LOG_TIMESTAMP = "%b %d, %y %I:%M:%S %p"
 
 
 def _get_match_factors(sheet_entry, bank_entry, accounts):
@@ -221,8 +224,16 @@ def find_new_entries(sheet_entries, bank_entries, fields, accounts):
     return unmatched
 
 
+def log(message):
+    """Log to the log file."""
+    with open(LOG_FILE, "a") as log:
+        log.write(datetime.datetime.now().strftime(LOG_TIMESTAMP) + " " + message + "\n")
+
+
 def main():
     """Run the program."""
+    log("START")
+
     sheets_api.authorize()
 
     accounts = sheet.get_accounts()
@@ -235,6 +246,8 @@ def main():
     new_entries = find_new_entries(sheet_entries, bank_entries, sheet_fields, accounts)
     sheet.add_entries(new_entries, sheet_fields, accounts)
     sheet.update_timestamp()
+
+    log("STOP")
 
 
 if __name__ == "__main__":
