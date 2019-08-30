@@ -3,7 +3,9 @@
 import sheets_api
 import sheet
 import bank_website
+
 import datetime
+import traceback
 
 
 MATCH_WEIGHTS = {
@@ -23,7 +25,7 @@ MATCH_RANGES = {
 THRESHOLD = 0.5
 PROMPT_NEAR_MATCHES = False
 LOG_FILE = "log.txt"
-LOG_TIMESTAMP = "%b %d, %y %I:%M:%S %p"
+LOG_TIMESTAMP = "%b %d, %Y %I:%M:%S %p"
 
 
 def _get_match_factors(sheet_entry, bank_entry, accounts):
@@ -252,4 +254,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        tb = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+        log("ERROR\n" + "".join(tb))
