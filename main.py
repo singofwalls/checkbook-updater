@@ -1,3 +1,4 @@
+#!/usr/bin/env python3.7
 """A rewrite of the banking script."""
 import sheets_api
 import sheet
