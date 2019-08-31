@@ -259,3 +259,4 @@ if __name__ == "__main__":
     except Exception as e:
         tb = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
         log("ERROR\n" + "".join(tb))
+        raise e

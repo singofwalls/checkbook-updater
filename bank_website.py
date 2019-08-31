@@ -178,6 +178,7 @@ def _get_driver(info, headless=True):
     options = webdriver.ChromeOptions()
     options.headless = headless
     options.add_argument("log-level=3")
+    options.add_argument("--no-sandbox")
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
     driver = webdriver.Chrome(options=options)
     driver.get(info["url"])
