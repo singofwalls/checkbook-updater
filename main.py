@@ -177,17 +177,10 @@ def _find_imperfect_matches(
             )
 
             # More than likely no longer pending in this case. Update.
-            pending_update = (
-                closest_match["Pending"] == "Yes"
-                and bank_entry["Transaction Status"] == "No"
-            )
-            desc_update = closest_match["Bank_Listed_Item"] != bank_entry["Description"]
-
+            pending_update = closest_match["Pending"] == "Yes"
             do_match = PROMPT_NEAR_MATCHES and input("Do these match? (y): ") == "y"
 
-            if do_match or (
-                not PROMPT_NEAR_MATCHES and (pending_update or desc_update)
-            ):
+            if do_match or (not PROMPT_NEAR_MATCHES and pending_update):
                 print("Updated matches")
                 matched_bank_indices.append(ind)
                 matched_sheet_indices.append(closest_match_ind)
@@ -230,7 +223,9 @@ def find_new_entries(sheet_entries, bank_entries, fields, accounts):
 def log(message):
     """Log to the log file."""
     with open(LOG_FILE, "a") as log:
-        log.write(datetime.datetime.now().strftime(LOG_TIMESTAMP) + " " + message + "\n")
+        log.write(
+            datetime.datetime.now().strftime(LOG_TIMESTAMP) + " " + message + "\n"
+        )
 
 
 def main():
