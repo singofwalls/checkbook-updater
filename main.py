@@ -116,8 +116,9 @@ def _find_perfect_matches(sheet_entries, bank_entries, fields, accounts):
         # Determine best score
         closest_match_ind = _get_closest_score(scores, matched_sheet_indices)
         closest_score = scores[closest_match_ind]
+        closest_match = sheet_entries[closest_match_ind]
 
-        if closest_score == 0:
+        if closest_score == 0 and not closest_match["Pending"] == "Yes":
             # Perfect match
             matched_sheet_indices.append(closest_match_ind)
             matched_bank_indices.append(bank_ind)
@@ -171,7 +172,6 @@ def _find_imperfect_matches(
         closest_match = sheet_entries[closest_match_ind]
 
         if closest_score < THRESHOLD:
-            # print(f"NEAR MATCH: {closest_score} for", bank_entry, closest_match)
             print_match(
                 closest_match, bank_entry, closest_score, closest_match_ind, accounts
             )
