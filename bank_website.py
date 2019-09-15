@@ -2,12 +2,13 @@
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import (
-    ElementNotInteractableException,
-    NoSuchElementException,
-    UnexpectedAlertPresentException,
-    ElementNotVisibleException
-)
+from selenium.common.exceptions import (ElementNotInteractableException,
+                                        NoSuchElementException,
+                                        UnexpectedAlertPresentException,
+                                        ElementNotVisibleException)
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
 
 from formatting import format_value
 import sheet
@@ -15,9 +16,10 @@ import sheet
 import time
 import json
 
-
 BANK_INFO = "bank_info.json"
 DATE_FORMAT = "%b %d, %Y"
+
+HEADLESS = True
 
 
 def _expand_table(driver):
@@ -27,8 +29,7 @@ def _expand_table(driver):
     # Select the more transactions button
     try:
         more = driver.find_element_by_css_selector(
-            "#table--transactions > tfoot > tr:nth-child(1) > td > button"
-        )
+            "#table--transactions > tfoot > tr:nth-child(1) > td > button")
         while True:
             # Load all transactions
             time.sleep(1)
@@ -104,16 +105,11 @@ def _process_accounts(driver, accounts):
     for i in range(len(accounts)):
         account = accounts[i]
 
-        while True:
-            try:
-                account_links = driver.find_elements_by_partial_link_text("Account")
-                # First account link is to Accounts header
-                account_links[i + 1].click()
-                break
-            except Exception as e:
-                driver.refresh()
-                time.sleep(3)
+        wait = WebDriverWait(driver, 10)
+        account_link = wait.until(
+            EC.element_to_be_clickable((By.PARTIAL_LINK_TEXT, account)))
 
+        account_link.click()
         available = format_value(driver.find_element_by_class_name("h2").text)
         sheet.add_bank_balance(available, account, accounts)
 
@@ -202,12 +198,13 @@ def get_entries(accounts):
         return entries
 
     info = _get_bank_info()
-    driver = _get_driver(info)
+    driver = _get_driver(info, HEADLESS)
     try:
         return _get_entries(accounts, driver, info)
     except UnexpectedAlertPresentException:
         # Try one more time if an alert appears.
-        # Appears to happen after answering security questions which should only be
+        # Appears to happen after answering security questions which should
+        # only be
         # necessary once anyway.
         return _get_entries(accounts, driver, info)
     finally:
