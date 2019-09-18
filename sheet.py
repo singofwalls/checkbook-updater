@@ -6,7 +6,8 @@ from formatting import format_value
 
 # Constants
 ACCOUNT_ROW = 1
-FIELD_ROW = 7
+FIELD_ROW = 8
+REPORTED_OFFSET = 4  # The distance between the accounts row and the reported row
 SHEET_NAME = "Sheet1"
 DATE_FORMAT = "%m/%d/%Y"
 START_CELL = "$G$6"  # If changed, must recopy formula to all cells in running columns
@@ -164,7 +165,7 @@ def get_value(bank_entry, sheet_field, accounts):
 
 def add_bank_balance(amount, account, accounts):
     """Add the bank's reported amount to the sheet."""
-    row = ACCOUNT_ROW + 3
+    row = ACCOUNT_ROW + REPORTED_OFFSET
     values = [None] * len(accounts)
     values[accounts.index(account)] = amount
     sheets_api.update_cells(f"{SHEET_NAME}!B{row}", [values])
