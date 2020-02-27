@@ -5,7 +5,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import (ElementNotInteractableException,
                                         NoSuchElementException,
                                         UnexpectedAlertPresentException,
-                                        ElementNotVisibleException)
+                                        ElementNotVisibleException,
+                                        TimeoutException)
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -135,8 +136,10 @@ def _security_question(driver, info):
     May not be necessary if device already remembered.
     """
     try:
+        wait = WebDriverWait(driver, 10)
+        wait.until(EC.element_to_be_clickable((By.ID, "horiz-3-question")))
         form = driver.find_element_by_id("securityChallengeForm")
-    except NoSuchElementException:
+    except (NoSuchElementException, TimeoutException):
         # Not on security page
         return
 
